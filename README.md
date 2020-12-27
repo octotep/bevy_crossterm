@@ -36,7 +36,7 @@ See the [examples](examples/) for runnable code and detailed comments.
 ```toml
 [dependencies]
 bevy = { version = "0.4", default-features = false }
-bevy_crossterm = { git = "https://github.com/octotep/bevy_crossterm" }
+bevy_crossterm = { git = "https://github.com/octotep/bevy_crossterm", branch = "trunk" }
 ```
 
 ```rust

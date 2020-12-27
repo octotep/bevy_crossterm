@@ -1,12 +1,17 @@
 # ![bevy_crossterm](images/bevy_crossterm.png)
 
-## Demo GIF
-
-![demo](images/bevy_crossterm.gif)
 
 ## What is bevy_crossterm?
 
 `bevy_crossterm` is a [Bevy](https://github.com/bevyengine/bevy) plugin that uses [crossterm](https://github.com/crossterm-rs/crossterm) as a renderer. It provides custom components and events which allow users to develop games for the terminal.
+
+
+## Table of Contents
+
+* [Features](#features)
+* [Demo GIF](#demo-gif)
+* [Getting Started](#getting-started)
+
 
 ## Features
 
@@ -17,6 +22,11 @@
 - Position, show, and hide the cursor
 - Set window title
 - Plugs into Bevy's asset system so sprites and styles can be loaded from disk and also hot reloaded
+
+
+## Demo GIF
+
+![demo](images/bevy_crossterm.gif)
 
 
 ## Getting Started

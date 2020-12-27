@@ -127,12 +127,18 @@ pub(crate) fn calculate_entities_to_redraw(
     >,
     added: Query<
         Entity,
-        Or<(
-            Added<Position>,
-            Added<Handle<StyleMap>>,
-            Added<Visible>,
-            Added<Handle<Sprite>>,
-        )>,
+        (
+            Or<(
+                Added<Position>,
+                Added<Handle<StyleMap>>,
+                Added<Visible>,
+                Added<Handle<Sprite>>,
+            )>,
+            With<Position>,
+            With<Handle<StyleMap>>,
+            With<Visible>,
+            With<Handle<Sprite>>,
+        ),
     >,
 ) {
     entities.full_redraw = false;
@@ -398,7 +404,7 @@ fn draw_entity(
         }
 
         // Calculate the beginning and end of string sprte, to not render things off screen
-        let start: i32 = std::cmp::max(0, pos.x).try_into()?;
+        let start: i32 = std::cmp::max(0, pos.x);
         let end: i32 = std::cmp::min(window.width as i32, pos.x + line.len() as i32);
 
         let start_idx: usize = (start - pos.x).try_into()?;
@@ -410,23 +416,19 @@ fn draw_entity(
         ))?;
 
         let graphemes = &line[start_idx..end_idx];
-        if graphemes.len() != 0 {
+        if !graphemes.is_empty() {
             // Go through each grapheme one by one to make sure we have the correct style and color
             // (Cross reference with the stylemap, otherwise default to )
             for (i, grapheme) in graphemes.iter().enumerate() {
                 let idx = start_idx + i;
 
-                // We need to skip the grapheme if it's a space and supposed to be transparent
-                if draw.is_transparent {
-                    if let Some(_) = stylemap.style_at(idx, line_num) {
-                        // Just fallthrough
-                    } else {
-                        // If the grapheme is a transparent space with no style, skip it
-                        if sprite.grapheme(grapheme) == " " {
-                            term.queue(crossterm::cursor::MoveRight(1))?;
-                            continue;
-                        }
-                    }
+                // If the grapheme is a transparent space with no style, skip rendering it
+                if draw.is_transparent
+                    && stylemap.style_at(idx, line_num).is_none()
+                    && sprite.grapheme(grapheme) == " "
+                {
+                    term.queue(crossterm::cursor::MoveRight(1))?;
+                    continue;
                 }
 
                 // Get the style we need to render this grapheme with
@@ -445,15 +447,10 @@ fn draw_entity(
             for (i, space) in blank_str.chars().enumerate() {
                 let idx = end_idx + i;
 
-                // We need to skip the grapheme if it's a space and supposed to be transparent
-                if draw.is_transparent {
-                    if let Some(_) = stylemap.style_at(idx, line_num) {
-                        // Just fallthrough
-                    } else {
-                        // The grapheme is a transparent space with no style, so skip it
-                        term.queue(crossterm::cursor::MoveRight(1))?;
-                        continue;
-                    }
+                // If the filler space is transparent and has no style, skip it
+                if draw.is_transparent && stylemap.style_at(idx, line_num).is_none() {
+                    term.queue(crossterm::cursor::MoveRight(1))?;
+                    continue;
                 }
 
                 // Get the style we need to render this space with
@@ -497,7 +494,7 @@ fn clear_entity(
             break;
         }
 
-        let x_start: i32 = std::cmp::max(0, prev_pos.x).try_into()?;
+        let x_start: i32 = std::cmp::max(0, prev_pos.x);
         let x_end: i32 = std::cmp::min(window.width as i32, prev_pos.x + prev_size.width as i32);
 
         let actual_width = x_end - x_start;
@@ -539,7 +536,7 @@ pub(crate) fn crossterm_render(
     let mut term = stdout.lock();
 
     // If we're gonna be drawing stuff, hide the cursor so it doesn't jump all over the place
-    if changed_entities.to_draw.len() > 0 {
+    if !changed_entities.to_draw.is_empty() {
         term.execute(crossterm::cursor::Hide).unwrap();
     }
 
@@ -561,9 +558,6 @@ pub(crate) fn crossterm_render(
     }
 
     // Redraw all the changed sprites, either because they moved, or because they changed their shape
-    // for entity in changed_entities.to_clear.iter() {
-    //     draw_entity(*entity, &mut term, &window, &sprites, &stylemaps, &all).unwrap();
-    // }
     for entity in changed_entities.to_draw.iter() {
         draw_entity(
             entity.entity,

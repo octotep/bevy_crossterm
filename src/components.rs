@@ -98,7 +98,6 @@ impl Colors {
 }
 
 mod attribute_parser {
-    use crossterm;
     use serde::de::Visitor;
     use serde::{Deserializer, Serializer};
     pub fn serialize<S>(
@@ -262,7 +261,7 @@ impl StyleMap {
     pub fn style_for(&self, x: usize, y: usize) -> Style {
         let grapheme = self.style_at(x, y);
         if let Some(style) = grapheme {
-            style.clone()
+            *style
         } else {
             self.style
         }

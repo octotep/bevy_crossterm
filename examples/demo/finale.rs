@@ -19,7 +19,10 @@ pub fn setup(
     style.map.push(Vec::new());
     for ch in goodbye.data().chars() {
         if ch == '<' || ch == '3' {
-            style.map[0].push(Style::new(Colors::new(Color::White, Color::DarkRed), Attributes::from(Attribute::Bold)));
+            style.map[0].push(Style::new(
+                Colors::new(Color::White, Color::DarkRed),
+                Attributes::from(Attribute::Bold),
+            ));
         } else {
             style.map[0].push(Style::default());
         }

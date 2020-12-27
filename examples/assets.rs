@@ -47,10 +47,7 @@ pub fn main() {
         .run();
 }
 
-static ASSETS: &[&str] = &[
-    "demo/title.txt",
-    "demo/title.stylemap"
-];
+static ASSETS: &[&str] = &["demo/title.txt", "demo/title.stylemap"];
 
 // This is a simple system that loads assets from the filesystem
 fn loading_system(
@@ -102,11 +99,10 @@ fn create_entities(
     let center_x = window.x_center() as i32 - title_sprite.x_center() as i32;
     let center_y = window.y_center() as i32 - title_sprite.y_center() as i32;
 
-    commands
-        .spawn(SpriteBundle {
-            sprite: title_handle.clone(),
-            position: Position::with_xy(center_x, center_y),
-            stylemap: asset_server.get_handle("demo/title.stylemap"),
-            ..Default::default()
-        });
+    commands.spawn(SpriteBundle {
+        sprite: title_handle.clone(),
+        position: Position::with_xy(center_x, center_y),
+        stylemap: asset_server.get_handle("demo/title.stylemap"),
+        ..Default::default()
+    });
 }

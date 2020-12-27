@@ -3,11 +3,11 @@ use bevy_crossterm::prelude::*;
 
 use std::default::Default;
 
-mod title;
-mod sprites;
-mod colors;
 mod animation;
+mod colors;
 mod finale;
+mod sprites;
+mod title;
 
 #[derive(Clone)]
 pub enum GameState {
@@ -23,12 +23,12 @@ impl GameState {
     pub fn next_state(&self) -> Option<GameState> {
         use GameState::*;
         match self {
-            Loading => { Some(Title) }
-            Title => { Some(Sprites) }
-            Sprites => { Some(Colors) }
-            Colors => { Some(Animation) }
-            Animation => { Some(Finale) }
-            Finale => { None }
+            Loading => Some(Title),
+            Title => Some(Sprites),
+            Sprites => Some(Colors),
+            Colors => Some(Animation),
+            Animation => Some(Finale),
+            Finale => None,
         }
     }
 }
@@ -52,30 +52,23 @@ pub fn main() {
         .add_stage_after(stage::UPDATE, STAGE, StateStage::<GameState>::default())
         .add_resource(State::new(GameState::Loading))
         .on_state_update(STAGE, GameState::Loading, check_for_loaded.system())
-        
         .on_state_enter(STAGE, GameState::Title, title::setup.system())
         .on_state_update(STAGE, GameState::Title, just_wait_and_advance.system())
         .on_state_exit(STAGE, GameState::Title, simple_teardown.system())
-
         .on_state_enter(STAGE, GameState::Sprites, sprites::setup.system())
         .on_state_update(STAGE, GameState::Sprites, just_wait_and_advance.system())
         .on_state_exit(STAGE, GameState::Sprites, simple_teardown.system())
-
         .on_state_enter(STAGE, GameState::Colors, colors::setup.system())
         .on_state_update(STAGE, GameState::Colors, just_wait_and_advance.system())
         .on_state_exit(STAGE, GameState::Colors, simple_teardown.system())
-
         .on_state_enter(STAGE, GameState::Animation, animation::setup.system())
         .on_state_update(STAGE, GameState::Animation, animation::update.system())
         .on_state_exit(STAGE, GameState::Animation, simple_teardown.system())
-
         .on_state_enter(STAGE, GameState::Finale, finale::setup.system())
         .on_state_update(STAGE, GameState::Finale, just_wait_and_advance.system())
         .on_state_exit(STAGE, GameState::Finale, simple_teardown.system())
-
         .run();
 }
-
 
 fn loading_system(
     commands: &mut Commands,
@@ -112,14 +105,11 @@ fn check_for_loaded(
 }
 
 // Setup anything needed globally for the demo
-pub fn demo_setup(
-    commands: &mut Commands,
-) {
+pub fn demo_setup(commands: &mut Commands) {
     let scene_root = commands.spawn(()).current_entity().unwrap();
 
     commands.insert_resource(scene_root);
 }
-
 
 // Helper function to see if there was a key press this frame
 pub fn detect_keypress(keys: Res<Events<KeyEvent>>) -> bool {
@@ -142,12 +132,8 @@ pub fn just_wait_and_advance(
 }
 
 // Looks for an entity resource and then despawns that entity and all it's children
-pub fn simple_teardown(
-    commands: &mut Commands,
-    mut scene_root: ResMut<Entity>,
-) {
-    commands
-        .despawn_recursive(*scene_root);
+pub fn simple_teardown(commands: &mut Commands, mut scene_root: ResMut<Entity>) {
+    commands.despawn_recursive(*scene_root);
 
     // Create a new, valid scene_root
     *scene_root = commands.spawn(()).current_entity().unwrap();

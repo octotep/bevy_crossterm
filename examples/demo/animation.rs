@@ -18,9 +18,7 @@ pub fn setup(
     let white = stylemaps.add(StyleMap::with_bg(Color::White));
 
     let text_sprite = Sprite::new("If you modify the position, the sprite will be rerendered at the new position.\nbevy_crossterm draws incrementally, so any sprites that change are erased then drawn at their new position.\nAll other sprites affected by the erasing step are redrawn too.\nThis cuts down on the amount of things to redraw in a single frame.");
-    let text_pos = Position::with_x(
-        window.x_center() as i32 - text_sprite.x_center() as i32,
-    );
+    let text_pos = Position::with_x(window.x_center() as i32 - text_sprite.x_center() as i32);
 
     let hor_divider = Sprite::new("─".repeat(window.width() as usize));
     let divider_pos = Position::with_y(text_sprite.height() as i32);
@@ -39,7 +37,6 @@ pub fn setup(
             ..Default::default()
         })
         .with(Parent(*scene_root))
-
         .spawn(SpriteBundle {
             sprite: sprites.add(hor_divider),
             position: divider_pos,
@@ -47,7 +44,6 @@ pub fn setup(
             ..Default::default()
         })
         .with(Parent(*scene_root))
-
         .spawn(SpriteBundle {
             sprite: sprites.add(test_box),
             stylemap: white.clone(),
@@ -55,22 +51,14 @@ pub fn setup(
             ..Default::default()
         })
         .with(Parent(*scene_root))
-
         .spawn(SpriteBundle {
             sprite: asset_server.get_handle("demo/bounce.txt"),
             stylemap: asset_server.get_handle("demo/bounce.stylemap"),
-            position: Position::new(
-                window.x_center() as i32,
-                window.y_center() as i32,
-                1
-            ),
+            position: Position::new(window.x_center() as i32, window.y_center() as i32, 1),
             ..Default::default()
         })
         .with(Parent(*scene_root))
-        .with(Velocity {
-            x: 1,
-            y: 1,
-        });
+        .with(Velocity { x: 1, y: 1 });
 
     commands.insert_resource(Timer::new(std::time::Duration::from_millis(120), true));
 }

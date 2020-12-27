@@ -18,9 +18,8 @@ static COLORS: &[Color] = &[
     Cyan,
     DarkCyan,
     White,
-    Grey
+    Grey,
 ];
-
 
 pub fn setup(
     commands: &mut Commands,
@@ -31,7 +30,8 @@ pub fn setup(
 ) {
     const Y_MARGIN: i32 = 2;
 
-    let title_sprite = Sprite::new("bevy_crossterm supports up to 24-bit color! (on terminals where supported)");
+    let title_sprite =
+        Sprite::new("bevy_crossterm supports up to 24-bit color! (on terminals where supported)");
     let title_pos = Position::with_xy(
         window.x_center() as i32 - title_sprite.x_center() as i32,
         Y_MARGIN,
@@ -46,18 +46,14 @@ pub fn setup(
             stylemap: default_style.clone(),
             ..Default::default()
         })
-        .with(Parent(*scene_root))
-        ;
+        .with(Parent(*scene_root));
 
     let space = sprites.add(Sprite::new("    "));
 
     // Normal terminal colors
-    let color_x_start = window.x_center() as i32 - 2*16;
+    let color_x_start = window.x_center() as i32 - 2 * 16;
     for (num, color) in COLORS.iter().enumerate() {
-        let position = Position::with_xy(
-            color_x_start + (num as i32 * 4),
-            Y_MARGIN*2,
-        );
+        let position = Position::with_xy(color_x_start + (num as i32 * 4), Y_MARGIN * 2);
 
         let stylemap = stylemaps.add(StyleMap::with_bg(*color));
 
@@ -74,17 +70,14 @@ pub fn setup(
     // ANSI colors
     let smaller_space = sprites.add(Sprite::new("   "));
     let colors_per_row = (window.width() as i32 - 4) / 3;
-    let color_y_start = Y_MARGIN*3;
+    let color_y_start = Y_MARGIN * 3;
     let color_x_start = 2;
     for color in 0u8..=255 {
         let stylemap = stylemaps.add(StyleMap::with_bg(Color::AnsiValue(color)));
 
         let linenum = color as i32 / colors_per_row;
         let offset = color as i32 % colors_per_row;
-        let position = Position::with_xy(
-            color_x_start + (offset * 3),
-            color_y_start + linenum,
-        );
+        let position = Position::with_xy(color_x_start + (offset * 3), color_y_start + linenum);
 
         commands
             .spawn(SpriteBundle {
@@ -99,17 +92,18 @@ pub fn setup(
     // Linear gradients for RGB colors
 
     let smallest_space = sprites.add(Sprite::new("  "));
-    let red_y_start = color_y_start + (256/colors_per_row) + Y_MARGIN;
+    let red_y_start = color_y_start + (256 / colors_per_row) + Y_MARGIN;
     let gradient_per_row = (window.width() as usize - 4) / 2;
     let color_step = 255 / gradient_per_row as u8;
     // Red
     for red in 0..=gradient_per_row {
-        let color = Color::Rgb { r: (color_step*red as u8), b: 0, g: 0 };
+        let color = Color::Rgb {
+            r: (color_step * red as u8),
+            b: 0,
+            g: 0,
+        };
 
-        let position = Position::with_xy(
-            color_x_start + (red as i32 * 2),
-            red_y_start,
-        );
+        let position = Position::with_xy(color_x_start + (red as i32 * 2), red_y_start);
 
         let stylemap = stylemaps.add(StyleMap::with_bg(color));
 
@@ -125,12 +119,13 @@ pub fn setup(
 
     // Blue
     for blue in 0..=gradient_per_row {
-        let color = Color::Rgb { r: 0, b: (color_step*blue as u8), g: 0 };
+        let color = Color::Rgb {
+            r: 0,
+            b: (color_step * blue as u8),
+            g: 0,
+        };
 
-        let position = Position::with_xy(
-            color_x_start + (blue as i32 * 2),
-            red_y_start + Y_MARGIN,
-        );
+        let position = Position::with_xy(color_x_start + (blue as i32 * 2), red_y_start + Y_MARGIN);
 
         let stylemap = stylemaps.add(StyleMap::with_bg(color));
 
@@ -146,7 +141,11 @@ pub fn setup(
 
     // Green
     for green in 0..=gradient_per_row {
-        let color = Color::Rgb { r: 0, b: 0, g: (color_step*green as u8) };
+        let color = Color::Rgb {
+            r: 0,
+            b: 0,
+            g: (color_step * green as u8),
+        };
 
         let position = Position::with_xy(
             color_x_start + (green as i32 * 2),
@@ -167,7 +166,11 @@ pub fn setup(
 
     // All
     for code in 0..=gradient_per_row {
-        let color = Color::Rgb { r: (color_step*code as u8), b: (color_step*code as u8), g: (color_step*code as u8) };
+        let color = Color::Rgb {
+            r: (color_step * code as u8),
+            b: (color_step * code as u8),
+            g: (color_step * code as u8),
+        };
 
         let position = Position::with_xy(
             color_x_start + (code as i32 * 2),

@@ -12,10 +12,16 @@ fn main() {
     let b = Style::with_colors(Colors::new(Color::White, Color::AnsiValue(27)));
     let i = Style::with_colors(Colors::new(Color::White, Color::AnsiValue(19)));
     let v = Style::with_colors(Colors::new(Color::White, Color::AnsiValue(91)));
-    stylemap.map.push(vec![w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w]);
-    stylemap.map.push(vec![w, w, r, o, y, g, b, i, v, r, o, y, g, b, i, v, w, w]);
-    stylemap.map.push(vec![w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w]);
-    
+    stylemap
+        .map
+        .push(vec![w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w]);
+    stylemap
+        .map
+        .push(vec![w, w, r, o, y, g, b, i, v, r, o, y, g, b, i, v, w, w]);
+    stylemap
+        .map
+        .push(vec![w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w]);
+
     let file = std::fs::File::create("bounce.stylemap").unwrap();
     ron::ser::to_writer(&file, &stylemap).unwrap();
 }

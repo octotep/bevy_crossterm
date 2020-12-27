@@ -375,10 +375,11 @@ fn draw_entity(
     let stylemap = stylemap.unwrap();
     let sprite_colors = stylemap.style.colors.with_default(window.colors);
 
-    term
-        .queue(crossterm::style::SetAttribute(crossterm::style::Attribute::Reset))?
-        .queue(crossterm::style::SetAttributes(stylemap.style.attributes))?
-        .queue(crossterm::style::SetColors(sprite_colors.to_crossterm()))?;
+    term.queue(crossterm::style::SetAttribute(
+        crossterm::style::Attribute::Reset,
+    ))?
+    .queue(crossterm::style::SetAttributes(stylemap.style.attributes))?
+    .queue(crossterm::style::SetColors(sprite_colors.to_crossterm()))?;
 
     let mut previous_style = stylemap.style;
 
@@ -544,13 +545,14 @@ pub(crate) fn crossterm_render(
 
     // If a resize happened, clear the screen and go from there
     if changed_entities.full_redraw {
-        term
-            .execute(crossterm::style::SetAttribute(crossterm::style::Attribute::Reset))
-            .unwrap()
-            .execute(crossterm::terminal::Clear(
-                crossterm::terminal::ClearType::All,
-            ))
-            .unwrap();
+        term.execute(crossterm::style::SetAttribute(
+            crossterm::style::Attribute::Reset,
+        ))
+        .unwrap()
+        .execute(crossterm::terminal::Clear(
+            crossterm::terminal::ClearType::All,
+        ))
+        .unwrap();
     }
 
     // Blank out all the previous locations of sprites that changed either their position or their size

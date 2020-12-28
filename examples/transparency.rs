@@ -5,7 +5,7 @@ use std::default::Default;
 
 pub fn main() {
     // Window settings must happen before the crossterm Plugin
-    let mut settings = WindowSettings::default();
+    let mut settings = CrosstermWindowSettings::default();
     settings.set_title("Transparency example");
 
     App::build()

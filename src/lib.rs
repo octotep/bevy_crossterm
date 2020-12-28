@@ -48,21 +48,21 @@ impl Plugin for CrosstermPlugin {
 }
 
 #[derive(Clone, Eq, PartialEq)]
-pub struct WindowSettings {
+pub struct CrosstermWindowSettings {
     colors: components::Colors,
     title: Option<String>,
 }
 
-impl Default for WindowSettings {
+impl Default for CrosstermWindowSettings {
     fn default() -> Self {
-        WindowSettings {
+        CrosstermWindowSettings {
             colors: components::Colors::term_colors(),
             title: None,
         }
     }
 }
 
-impl WindowSettings {
+impl CrosstermWindowSettings {
     pub fn colors(&self) -> components::Colors {
         self.colors
     }

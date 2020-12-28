@@ -1,6 +1,6 @@
 use std::io::Write;
 
-use crate::{CrosstermWindow, WindowSettings};
+use crate::{CrosstermWindow, CrosstermWindowSettings};
 
 use bevy::app::{App, AppExit, Events};
 use bevy::window::{WindowCreated, WindowId, WindowResized};
@@ -13,7 +13,7 @@ pub fn crossterm_runner(mut app: App) {
         .to_owned();
     let window_settings = app
         .resources
-        .get_or_insert_with(WindowSettings::default)
+        .get_or_insert_with(CrosstermWindowSettings::default)
         .clone();
 
     let mut term = std::io::stdout();

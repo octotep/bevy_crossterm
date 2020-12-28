@@ -37,7 +37,7 @@ static STAGE: &str = "DEMO";
 
 pub fn main() {
     // Window settings must happen before the crossterm Plugin
-    let mut settings = WindowSettings::default();
+    let mut settings = CrosstermWindowSettings::default();
     settings.set_title("bevy_crossterm demo");
 
     App::build()

@@ -516,7 +516,7 @@ fn clear_entity(
     Ok(())
 }
 
-// TODO: Redraw entities if they were under another entity that became invisible or was deleted, or moves
+
 pub(crate) fn crossterm_render(
     changed_entities: Res<EntitiesToRedraw>,
     window: Res<CrosstermWindow>,

@@ -44,7 +44,7 @@ use bevy::prelude::*;
 use bevy_crossterm::prelude::*;
 
 pub fn main() {
-    let mut settings = WindowSettings::default();
+    let mut settings = CrosstermWindowSettings::default();
     settings.set_title("Hello, World!");
 
     App::build()

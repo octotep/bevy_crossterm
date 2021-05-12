@@ -7,6 +7,7 @@ use crate::components::{
 };
 use crate::{CrosstermWindow, Cursor};
 
+
 use bevy::utils::HashSet;
 
 use bevy::prelude::*;
@@ -15,6 +16,7 @@ use components::EntitiesToRedraw;
 use crossterm::{ExecutableCommand, QueueableCommand};
 
 use broccoli::prelude::*;
+use bevy::app::Events;
 
 pub(crate) fn add_previous_position(
     mut entities_without_assets: Local<HashSet<Entity>>,
@@ -116,13 +118,14 @@ pub(crate) fn calculate_entities_to_redraw(
         &Position,
         &Visible,
     )>,
+    removed: RemovedComponents<Handle<Sprite>>,
     changed: Query<
         Entity,
         Or<(
-            Mutated<Position>,
-            Mutated<Handle<StyleMap>>,
-            Mutated<Visible>,
-            Mutated<Handle<Sprite>>,
+            Changed<Position>,
+            Changed<Handle<StyleMap>>,
+            Changed<Visible>,
+            Changed<Handle<Sprite>>,
         )>,
     >,
     added: Query<
@@ -148,7 +151,7 @@ pub(crate) fn calculate_entities_to_redraw(
     let mut draw_set = HashSet::default();
 
     // If a resize happened the whole screen is invalidated
-    if resize_events.get_reader().latest(&resize_events).is_some() || window.colors != prev_colors.0
+    if resize_events.get_reader().iter(&*resize_events).next().is_some() || window.colors != prev_colors.0
     {
         // We need a full redraw, so flag a full update and bail early
         // No need to do fancy update calculations
@@ -250,10 +253,10 @@ pub(crate) fn calculate_entities_to_redraw(
         }
         let (prev_pos, prev_size) = prev_data.unwrap();
         let blank_bb = broccoli::rect(
-            prev_pos.x,
-            prev_pos.x + prev_size.width as i32,
-            prev_pos.y,
-            prev_pos.y + prev_size.height as i32,
+            prev_pos.x.clone(),
+            prev_pos.x.clone() + prev_size.width.clone() as i32,
+            prev_pos.y.clone(),
+            prev_pos.y.clone() + prev_size.height.clone() as i32,
         );
         // dbg!("checking for collision", ent, prev_pos);
         broccoli.for_all_intersect_rect(&blank_bb, |bb| {
@@ -279,10 +282,10 @@ pub(crate) fn calculate_entities_to_redraw(
         }
         let (prev_pos, prev_size) = prev_data.unwrap();
         let blank_bb = broccoli::rect(
-            prev_pos.x,
-            prev_pos.x + prev_size.width as i32,
-            prev_pos.y,
-            prev_pos.y + prev_size.height as i32,
+            prev_pos.x.clone(),
+            prev_pos.x.clone() + prev_size.width.clone() as i32,
+            prev_pos.y.clone(),
+            prev_pos.y.clone() + prev_size.height.clone() as i32,
         );
         // dbg!("checking for collision", ent, prev_pos);
         broccoli.for_all_intersect_rect(&blank_bb, |bb| {
@@ -297,10 +300,9 @@ pub(crate) fn calculate_entities_to_redraw(
         });
     }
 
-    let removed = all.removed::<Handle<Sprite>>();
 
-    for entity in removed {
-        entities.to_clear.insert(*entity);
+    for entity in removed.iter() {
+        entities.to_clear.insert(entity);
     }
 
     for ent_to_draw in draw_set.iter() {
@@ -399,20 +401,20 @@ fn draw_entity(
 
         // If this line is off the bottom of the screen, break out since no lines can ever
         // be on the screen ever again
-        if pos.y + line_offset >= window.height.into() {
+        if pos.y + line_offset.clone() >= window.height.into() {
             break;
         }
 
         // Calculate the beginning and end of string sprte, to not render things off screen
         let start: i32 = std::cmp::max(0, pos.x);
-        let end: i32 = std::cmp::min(window.width as i32, pos.x + line.len() as i32);
+        let end: i32 = std::cmp::min(window.width.clone() as i32, pos.x + line.len() as i32);
 
         let start_idx: usize = (start - pos.x).try_into()?;
         let end_idx: usize = (end - pos.x).try_into()?;
 
         term.queue(crossterm::cursor::MoveTo(
             start.try_into()?,
-            (pos.y + line_offset).try_into()?,
+            (pos.y + line_offset.clone()).try_into()?,
         ))?;
 
         let graphemes = &line[start_idx..end_idx];
@@ -440,9 +442,9 @@ fn draw_entity(
         }
 
         // Lines don't have to go to the end of the sprite. Pad them out so the sprite is rectangular
-        if end < window.width as i32 && line.len() < sprite.width() {
+        if end < window.width.clone() as i32 && line.len() < sprite.width() {
             let unaccounted = sprite.width() - line.len();
-            let blank_length = std::cmp::min(unaccounted, (window.width as i32 - end) as usize);
+            let blank_length = std::cmp::min(unaccounted, (window.width.clone() as i32 - end.clone()) as usize);
             let blank_str = str::repeat(" ", blank_length);
             for (i, space) in blank_str.chars().enumerate() {
                 let idx = end_idx + i;
@@ -480,22 +482,22 @@ fn clear_entity(
     let (prev_pos, prev_size) = prev_details.unwrap();
 
     for height in 0..prev_size.height {
-        let y = prev_pos.y + height as i32;
+        let y = prev_pos.y.clone() + height as i32;
 
         if y < 0 {
             continue;
         }
 
         if prev_pos.y >= window.height.into()
-            || prev_pos.y + prev_size.height as i32 <= 0
-            || prev_pos.x >= window.width.into()
-            || prev_pos.x + prev_size.width as i32 <= 0
+            || prev_pos.y.clone() + prev_size.height.clone() as i32 <= 0
+            || prev_pos.x.clone() >= window.width.into()
+            || prev_pos.x.clone() + prev_size.width.clone() as i32 <= 0
         {
             break;
         }
 
-        let x_start: i32 = std::cmp::max(0, prev_pos.x);
-        let x_end: i32 = std::cmp::min(window.width as i32, prev_pos.x + prev_size.width as i32);
+        let x_start: i32 = std::cmp::max(0, prev_pos.x.clone());
+        let x_end: i32 = std::cmp::min(window.width.clone() as i32, prev_pos.x.clone() + prev_size.width.clone() as i32);
 
         let actual_width = x_end - x_start;
         let blank_string = " ".repeat(actual_width as usize);
@@ -573,11 +575,11 @@ pub(crate) fn crossterm_render(
     // Draw the cursor at the right position, if needed
     if !cursor.hidden {
         if cursor.x >= 0
-            && cursor.x < window.width as i32
+            && cursor.x < window.width.clone() as i32
             && cursor.y >= 0
-            && cursor.y < window.height as i32
+            && cursor.y < window.height.clone() as i32
         {
-            term.queue(crossterm::cursor::MoveTo(cursor.x as u16, cursor.y as u16))
+            term.queue(crossterm::cursor::MoveTo(cursor.x.clone() as u16, cursor.y.clone() as u16))
                 .unwrap();
             term.queue(crossterm::cursor::Show).unwrap();
         }

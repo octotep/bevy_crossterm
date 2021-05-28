@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_crossterm::prelude::*;
 
 pub fn setup(
-    commands: &mut Commands,
+    mut commands: Commands,
     scene_root: Res<Entity>,
     window: Res<CrosstermWindow>,
     asset_server: Res<AssetServer>,
@@ -63,56 +63,62 @@ pub fn setup(
     let transparent = Visible::transparent();
 
     commands
-        .spawn(SpriteBundle {
+        .spawn_bundle(SpriteBundle {
             sprite: sprites.add(explain_sprite),
             stylemap: default_style.clone(),
             position: explain_pos,
             ..Default::default()
         })
-        .with(Parent(*scene_root))
-        // These are the two boxes separately
-        .spawn(SpriteBundle {
+        .insert(Parent(*scene_root));
+    // These are the two boxes separately
+    commands
+        .spawn_bundle(SpriteBundle {
             sprite: asset_server.get_handle("demo/big_box.txt"),
             position: big_box_pos,
             stylemap: grey_handle.clone(),
             ..Default::default()
         })
-        .with(Parent(*scene_root))
-        .spawn(SpriteBundle {
+        .insert(Parent(*scene_root));
+    commands
+        .spawn_bundle(SpriteBundle {
             sprite: asset_server.get_handle("demo/small_box.txt"),
             stylemap: white_handle.clone(),
             position: small_box_pos,
             ..Default::default()
         })
-        .with(Parent(*scene_root))
-        // These are the sprites that make up the non-transparent demo
-        .spawn(SpriteBundle {
+        .insert(Parent(*scene_root));
+    // These are the sprites that make up the non-transparent demo
+    commands
+        .spawn_bundle(SpriteBundle {
             sprite: big_box_handle.clone(),
             position: big_combo_pos,
             stylemap: grey_handle.clone(),
             ..Default::default()
         })
-        .with(Parent(*scene_root))
-        .spawn(SpriteBundle {
+        .insert(Parent(*scene_root));
+    commands
+        .spawn_bundle(SpriteBundle {
             sprite: small_box_handle.clone(),
             position: small_combo_pos,
             stylemap: white_handle.clone(),
             ..Default::default()
         })
-        .with(Parent(*scene_root))
-        // These are the sprites that make up the trasparent demo
-        .spawn(SpriteBundle {
+        .insert(Parent(*scene_root));
+    // These are the sprites that make up the trasparent demo
+    commands
+        .spawn_bundle(SpriteBundle {
             sprite: big_box_handle.clone(),
             position: big_combo_trans_pos,
             stylemap: grey_handle.clone(),
             ..Default::default()
         })
-        .with(Parent(*scene_root))
-        .spawn(SpriteBundle {
+        .insert(Parent(*scene_root));
+    commands
+        .spawn_bundle(SpriteBundle {
             sprite: small_box_handle.clone(),
             position: small_combo_trans_pos,
             stylemap: white_handle.clone(),
             visible: transparent,
         })
-        .with(Parent(*scene_root));
+        .insert(Parent(*scene_root));
 }

@@ -10,13 +10,13 @@ pub fn main() {
 
     App::build()
         // Add our window settings
-        .add_resource(settings)
+        .insert_resource(settings)
         // Set some options in bevy to make our program a little less resource intensive - it's just a terminal game
         // no need to try and go nuts
-        .add_resource(bevy::core::DefaultTaskPoolOptions::with_num_threads(1))
+        .insert_resource(bevy::core::DefaultTaskPoolOptions::with_num_threads(1))
         // The Crossterm runner respects the schedulerunnersettings. No need to run as fast as humanly
         // possible - 20 fps should be more than enough for a scene that never changes
-        .add_resource(bevy::app::ScheduleRunnerSettings::run_loop(
+        .insert_resource(bevy::app::ScheduleRunnerSettings::run_loop(
             std::time::Duration::from_millis(50),
         ))
         // Add the DefaultPlugins before the CrosstermPlugin. The crossterm plugin needs bevy's asset server, and if it's
@@ -28,7 +28,7 @@ pub fn main() {
 }
 
 fn startup_system(
-    commands: &mut Commands,
+    mut commands: Commands,
     mut sprites: ResMut<Assets<Sprite>>,
     mut stylemaps: ResMut<Assets<StyleMap>>,
 ) {
@@ -39,12 +39,13 @@ fn startup_system(
 
     // Spawn two sprites into the world
     commands
-        .spawn(SpriteBundle {
+        .spawn_bundle(SpriteBundle {
             sprite: text,
             stylemap: color.clone(),
             ..Default::default()
-        })
-        .spawn(SpriteBundle {
+        });
+
+       commands.spawn_bundle(SpriteBundle {
             sprite: ctrlc,
             position: Position { x: 0, y: 3, z: 0 },
             stylemap: color,

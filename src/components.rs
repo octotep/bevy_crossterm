@@ -131,7 +131,7 @@ mod attribute_parser {
         {
             let mut attrs = crossterm::style::Attributes::default();
             for attr in crossterm::style::Attribute::iterator() {
-                if attr_bits & attr.bytes() != 0 {
+                if attr_bits.clone() & attr.bytes() != 0 {
                     attrs.set(attr);
                 }
             }

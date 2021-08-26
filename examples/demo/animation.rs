@@ -7,7 +7,7 @@ pub struct Velocity {
 }
 
 pub fn setup(
-    commands: &mut Commands,
+    mut commands: Commands,
     scene_root: Res<Entity>,
     window: Res<CrosstermWindow>,
     asset_server: Res<AssetServer>,
@@ -30,54 +30,57 @@ pub fn setup(
     );
 
     commands
-        .spawn(SpriteBundle {
+        .spawn_bundle(SpriteBundle {
             sprite: sprites.add(text_sprite),
             position: text_pos,
             stylemap: default_style.clone(),
             ..Default::default()
         })
-        .with(Parent(*scene_root))
-        .spawn(SpriteBundle {
+        .insert(Parent(*scene_root));
+    commands
+        .spawn_bundle(SpriteBundle {
             sprite: sprites.add(hor_divider),
             position: divider_pos,
             stylemap: default_style.clone(),
             ..Default::default()
         })
-        .with(Parent(*scene_root))
-        .spawn(SpriteBundle {
+        .insert(Parent(*scene_root));
+    commands
+        .spawn_bundle(SpriteBundle {
             sprite: sprites.add(test_box),
             stylemap: white.clone(),
             position: test_pos,
             ..Default::default()
         })
-        .with(Parent(*scene_root))
-        .spawn(SpriteBundle {
+        .insert(Parent(*scene_root));
+    commands
+        .spawn_bundle(SpriteBundle {
             sprite: asset_server.get_handle("demo/bounce.txt"),
             stylemap: asset_server.get_handle("demo/bounce.stylemap"),
             position: Position::new(window.x_center() as i32, window.y_center() as i32, 1),
             ..Default::default()
         })
-        .with(Parent(*scene_root))
-        .with(Velocity { x: 1, y: 1 });
+        .insert(Parent(*scene_root))
+        .insert(Velocity { x: 1, y: 1 });
 
     commands.insert_resource(Timer::new(std::time::Duration::from_millis(120), true));
 }
 
 pub fn update(
-    keys: Res<Events<KeyEvent>>,
+    mut keys: EventReader<KeyEvent>,
     mut state: ResMut<State<crate::GameState>>,
-    mut app_exit: ResMut<Events<bevy::app::AppExit>>,
+    mut app_exit: EventWriter<bevy::app::AppExit>,
     mut timer: ResMut<Timer>,
     window: Res<CrosstermWindow>,
     time: Res<Time>,
     sprites: Res<Assets<Sprite>>,
     mut box_sprite: Query<(&mut Position, &mut Velocity, &Handle<Sprite>)>,
 ) {
-    timer.tick(time.delta_seconds());
+    timer.tick(time.delta());
 
-    if crate::detect_keypress(keys) {
-        if let Some(new_state) = state.next_state() {
-            state.set_next(new_state).unwrap();
+    if crate::detect_keypress(&mut keys) {
+        if let Some(new_state) = state.current().next_state() {
+            state.push(new_state).unwrap();
         } else {
             app_exit.send(bevy::app::AppExit);
         }

@@ -1,4 +1,6 @@
 use bevy::prelude::*;
+use crate::stage::POST_RENDER;
+use bevy::app::CoreStage::Last;
 
 mod asset_loaders;
 pub mod components;
@@ -9,10 +11,10 @@ mod systems;
 pub struct CrosstermPlugin;
 impl Plugin for CrosstermPlugin {
     fn build(&self, app: &mut bevy::app::AppBuilder) {
-        app.add_resource(Cursor::default())
-            .add_resource(components::PreviousEntityDetails::default())
-            .add_resource(components::EntitiesToRedraw::default())
-            .add_resource(components::PreviousWindowColors::default())
+        app.insert_resource(Cursor::default())
+            .insert_resource(components::PreviousEntityDetails::default())
+            .insert_resource(components::EntitiesToRedraw::default())
+            .insert_resource(components::PreviousWindowColors::default())
             .add_asset::<components::Sprite>()
             .add_asset::<components::StyleMap>()
             .init_asset_loader::<asset_loaders::SpriteLoader>()
@@ -24,14 +26,14 @@ impl Plugin for CrosstermPlugin {
             // This must be before LAST because change tracking is cleared during LAST, but AssetEvents are published
             // after POST_UPDATE. The timing for all these things is pretty delicate
             .add_stage_before(
-                bevy::app::stage::LAST,
+                Last,
                 stage::PRE_RENDER,
                 SystemStage::parallel(),
             )
             .add_stage_after(stage::PRE_RENDER, stage::RENDER, SystemStage::parallel())
             .add_stage_after(stage::RENDER, stage::POST_RENDER, SystemStage::parallel())
             .add_system_to_stage(
-                bevy::app::stage::POST_UPDATE,
+                POST_RENDER,
                 systems::add_previous_position.system(),
             )
             // Needs asset events, and they aren't created until after POST_UPDATE, so we put them in PRE_RENDER
@@ -107,11 +109,11 @@ impl Default for CrosstermWindow {
 
 impl CrosstermWindow {
     pub fn height(&self) -> u16 {
-        self.height
+        self.height.clone()
     }
 
     pub fn width(&self) -> u16 {
-        self.width
+        self.width.clone()
     }
 
     pub fn title(&self) -> Option<&str> {
@@ -127,11 +129,11 @@ impl CrosstermWindow {
     }
 
     pub fn x_center(&self) -> u16 {
-        self.width / 2
+        self.width.clone() / 2
     }
 
     pub fn y_center(&self) -> u16 {
-        self.height / 2
+        self.height.clone() / 2
     }
 }
 

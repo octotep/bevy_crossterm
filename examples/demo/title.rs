@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_crossterm::prelude::*;
 
 pub fn setup(
-    commands: &mut Commands,
+    mut commands: Commands,
     asset_server: Res<AssetServer>,
     window: Res<CrosstermWindow>,
     scene_root: Res<Entity>,
@@ -37,14 +37,15 @@ pub fn setup(
     let color = stylemaps.add(StyleMap::default());
 
     commands
-        .spawn(SpriteBundle {
+        .spawn_bundle(SpriteBundle {
             sprite: title_handle,
             position: title_pos,
             stylemap: asset_server.load("demo/title.stylemap"),
             ..Default::default()
         })
-        .with(Parent(*scene_root))
-        .spawn(SpriteBundle {
+        .insert(Parent(*scene_root));
+    commands
+        .spawn_bundle(SpriteBundle {
             sprite: sprites.add(welcome_sprite),
             position: welcome_pos,
             stylemap: stylemaps.add(StyleMap::with_attribs(Attributes::from(
@@ -52,19 +53,21 @@ pub fn setup(
             ))),
             ..Default::default()
         })
-        .with(Parent(*scene_root))
-        .spawn(SpriteBundle {
+        .insert(Parent(*scene_root));
+    commands
+        .spawn_bundle(SpriteBundle {
             sprite: sprites.add(explain_sprite),
             position: explain_pos,
             stylemap: color.clone(),
             ..Default::default()
         })
-        .with(Parent(*scene_root))
-        .spawn(SpriteBundle {
+        .insert(Parent(*scene_root));
+    commands
+        .spawn_bundle(SpriteBundle {
             sprite: sprites.add(press_sprite),
             position: press_pos,
             stylemap: stylemaps.add(StyleMap::with_attrib(Attribute::Italic)),
             ..Default::default()
         })
-        .with(Parent(*scene_root));
+        .insert(Parent(*scene_root));
 }

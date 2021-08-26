@@ -3,13 +3,11 @@ use bevy_crossterm::prelude::*;
 
 use std::default::Default;
 
-#[derive(Clone)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 enum GameState {
     Loading,
     Running,
 }
-
-static STAGE: &str = "GAME";
 
 // PROTIP: _technically_ since Sprite's are just created using strings, an easier way to load them from an external
 // file is just:
@@ -28,20 +26,19 @@ pub fn main() {
 
     App::build()
         // Add our window settings
-        .add_resource(settings)
+        .insert_resource(settings)
         // Set some options in bevy to make our program a little less resource intensive - it's just a terminal game
         // no need to try and go nuts
-        .add_resource(bevy::core::DefaultTaskPoolOptions::with_num_threads(1))
+        .insert_resource(bevy::core::DefaultTaskPoolOptions::with_num_threads(1))
         // The Crossterm runner respects the schedulerunnersettings. No need to run as fast as humanly
         // possible - 20 fps should be more than enough for a scene that never changes
-        .add_resource(bevy::app::ScheduleRunnerSettings::run_loop(
+        .insert_resource(bevy::app::ScheduleRunnerSettings::run_loop(
             std::time::Duration::from_millis(50),
         ))
-        .add_stage_after(stage::UPDATE, STAGE, StateStage::<GameState>::default())
-        .add_resource(State::new(GameState::Loading))
-        .on_state_enter(STAGE, GameState::Loading, loading_system.system())
-        .on_state_update(STAGE, GameState::Loading, check_for_loaded.system())
-        .on_state_enter(STAGE, GameState::Running, create_entities.system())
+        .add_state(GameState::Loading)
+        .add_system_set(SystemSet::on_enter(GameState::Loading).with_system(loading_system.system()))
+        .add_system_set(SystemSet::on_update(GameState::Loading).with_system(check_for_loaded.system()))
+        .add_system_set(SystemSet::on_enter(GameState::Running).with_system(create_entities.system()))
         .add_plugins(DefaultPlugins)
         .add_plugin(CrosstermPlugin)
         .run();
@@ -51,7 +48,7 @@ static ASSETS: &[&str] = &["demo/title.txt", "demo/title.stylemap"];
 
 // This is a simple system that loads assets from the filesystem
 fn loading_system(
-    commands: &mut Commands,
+    mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut cursor: ResMut<Cursor>,
 ) {
@@ -78,7 +75,7 @@ fn check_for_loaded(
     match data {
         bevy::asset::LoadState::NotLoaded | bevy::asset::LoadState::Loading => {}
         bevy::asset::LoadState::Loaded => {
-            state.set_next(GameState::Running).unwrap();
+            state.push(GameState::Running).unwrap();
         }
         bevy::asset::LoadState::Failed => {}
     }
@@ -86,7 +83,7 @@ fn check_for_loaded(
 
 // Now that we're sure the assets are loaded, spawn a new sprite into the world
 fn create_entities(
-    commands: &mut Commands,
+    mut commands: Commands,
     window: Res<CrosstermWindow>,
     asset_server: Res<AssetServer>,
     sprites: Res<Assets<Sprite>>,
@@ -99,7 +96,7 @@ fn create_entities(
     let center_x = window.x_center() as i32 - title_sprite.x_center() as i32;
     let center_y = window.y_center() as i32 - title_sprite.y_center() as i32;
 
-    commands.spawn(SpriteBundle {
+    commands.spawn_bundle(SpriteBundle {
         sprite: title_handle.clone(),
         position: Position::with_xy(center_x, center_y),
         stylemap: asset_server.get_handle("demo/title.stylemap"),

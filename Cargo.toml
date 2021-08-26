@@ -11,7 +11,7 @@ edition = "2018"
 
 [dependencies]
 anyhow = "1.0"
-bevy = { version = "0.4", default-features = false }
+bevy = { version = "0.5", default-features = false }
 bitflags = "1.2"
 crossterm = { version = "0.18", features = ["serde"] }
 ron = "0.6"
@@ -20,7 +20,7 @@ unicode-segmentation = "1.7"
 broccoli = "1.2.5"
 
 [dev-dependencies]
-bevy = { version = "0.4", default-features = false }
+bevy = { version = "0.5", default-features = false }
 ron = "0.6"
 textwrap = "0.13.1"
 

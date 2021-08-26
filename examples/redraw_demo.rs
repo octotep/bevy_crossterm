@@ -20,13 +20,13 @@ pub fn main() {
     settings.set_title("Redraw example");
 
     App::build()
-        .add_resource(settings)
-        .add_resource(bevy::core::DefaultTaskPoolOptions::with_num_threads(1))
+        .insert_resource(settings)
+        .insert_resource(bevy::core::DefaultTaskPoolOptions::with_num_threads(1))
         // 60Hz update is probably a bit gratuitous for this but eh
-        .add_resource(bevy::app::ScheduleRunnerSettings::run_loop(
+        .insert_resource(bevy::app::ScheduleRunnerSettings::run_loop(
             std::time::Duration::from_millis(16),
         ))
-        .add_resource(Timer::new(std::time::Duration::from_millis(250), true))
+        .insert_resource(Timer::new(std::time::Duration::from_millis(250), true))
         .add_plugins(DefaultPlugins)
         .add_plugin(CrosstermPlugin)
         .add_startup_system(startup_system.system())
@@ -40,7 +40,7 @@ static BIG_BOX: &str = "       \n       \n       ";
 struct Tag;
 
 fn startup_system(
-    commands: &mut Commands,
+    mut commands: Commands,
     window: Res<CrosstermWindow>,
     mut cursor: ResMut<Cursor>,
     mut sprites: ResMut<Assets<Sprite>>,
@@ -56,7 +56,7 @@ fn startup_system(
 
     // Spawn two sprites into the world
     commands
-        .spawn(SpriteBundle {
+        .spawn_bundle(SpriteBundle {
             sprite: big_box,
             position: Position {
                 x: window.x_center() as i32 - 3,
@@ -65,9 +65,10 @@ fn startup_system(
             },
             stylemap: white_bg.clone(),
             ..Default::default()
-        })
-        // Moving entity that ensures the box will get redrawn each step the entity passes over it
-        .spawn(SpriteBundle {
+        });
+    // Moving entity that ensures the box will get redrawn each step the entity passes over it
+    commands
+        .spawn_bundle(SpriteBundle {
             sprite: small_box,
             position: Position {
                 x: window.width() as i32 / 3,
@@ -77,9 +78,9 @@ fn startup_system(
             stylemap: plain.clone(),
             ..Default::default()
         })
-        .with(Tag); // Tagged with a unit struct so we can find it later to update it
+        .insert(Tag); // Tagged with a unit struct so we can find it later to update it
                     // Static entity that ensures we redraw all entities that need to
-    commands.spawn(SpriteBundle {
+    commands.spawn_bundle(SpriteBundle {
         sprite: sprites.add(Sprite::new("#")),
         position: Position {
             x: window.x_center() as i32,
@@ -96,9 +97,9 @@ fn update(
     window: Res<CrosstermWindow>,
     mut timer: ResMut<Timer>,
     mut query: Query<(&Tag, &mut Position)>,
-    mut app_exit: ResMut<Events<AppExit>>,
+    mut app_exit: EventWriter<AppExit>,
 ) {
-    timer.tick(time.delta_seconds());
+    timer.tick(time.delta());
 
     if timer.just_finished() {
         let (_, mut pos) = query.iter_mut().next().unwrap();

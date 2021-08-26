@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_crossterm::prelude::*;
 
 pub fn setup(
-    commands: &mut Commands,
+    mut commands: Commands,
     scene_root: Res<Entity>,
     window: Res<CrosstermWindow>,
     mut sprites: ResMut<Assets<Sprite>>,
@@ -29,11 +29,11 @@ pub fn setup(
     }
 
     commands
-        .spawn(SpriteBundle {
+        .spawn_bundle(SpriteBundle {
             sprite: sprites.add(goodbye),
             position: goodbye_pos,
             stylemap: stylemaps.add(style),
             ..Default::default()
         })
-        .with(Parent(*scene_root));
+        .insert(Parent(*scene_root));
 }

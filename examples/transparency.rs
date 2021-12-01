@@ -1,7 +1,9 @@
-use bevy::prelude::*;
-use bevy_crossterm::prelude::*;
+use std::time;
 
-use std::default::Default;
+use bevy::app::ScheduleRunnerSettings;
+use bevy::prelude::*;
+
+use bevy_crossterm::prelude::*;
 
 pub fn main() {
     // Window settings must happen before the crossterm Plugin
@@ -9,14 +11,11 @@ pub fn main() {
     settings.set_title("Transparency example");
 
     App::build()
-        .add_resource(settings)
-        .add_resource(bevy::core::DefaultTaskPoolOptions::with_num_threads(1))
-        .add_resource(bevy::app::ScheduleRunnerSettings::run_loop(
-            std::time::Duration::from_millis(50),
-        ))
-        .add_resource(Timer::new(std::time::Duration::from_millis(250), true))
-        .add_plugins(DefaultPlugins)
-        .add_plugin(CrosstermPlugin)
+        .insert_resource(settings)
+        .insert_resource(DefaultTaskPoolOptions::with_num_threads(1))
+        .insert_resource(ScheduleRunnerSettings::run_loop(time::Duration::from_millis(6)))
+        .insert_resource(Timer::new(time::Duration::from_millis(10), true))
+        .add_plugins(DefaultCrosstermPlugins)
         .add_startup_system(startup_system.system())
         .run();
 }
@@ -29,13 +28,7 @@ static SMALL_BOX: &str = r##"@@@@@
 @ @ @
 @@@@@"##;
 
-fn startup_system(
-    commands: &mut Commands,
-    window: Res<CrosstermWindow>,
-    mut cursor: ResMut<Cursor>,
-    mut sprites: ResMut<Assets<Sprite>>,
-    mut stylemaps: ResMut<Assets<StyleMap>>,
-) {
+fn startup_system(mut commands: Commands, window: Res<CrosstermWindow>, mut cursor: ResMut<Cursor>, mut sprites: ResMut<Assets<Sprite>>, mut stylemaps: ResMut<Assets<StyleMap>>) {
     cursor.hidden = true;
 
     // Create our resources
@@ -43,26 +36,26 @@ fn startup_system(
     let white_bg = stylemaps.add(StyleMap::with_bg(Color::White));
 
     // Spawn two sprites into the world
+    commands.spawn_bundle(SpriteBundle {
+        sprite: sprites.add(Sprite::new(BIG_BOX)),
+        position: Position {
+            x: window.x_center() as i32 - 3,
+            y: window.y_center() as i32 - 1,
+            z: 0,
+        },
+        stylemap: white_bg,
+        ..Default::default()
+    });
     commands
-        .spawn(SpriteBundle {
-            sprite: sprites.add(Sprite::new(BIG_BOX)),
-            position: Position {
-                x: window.x_center() as i32 - 3,
-                y: window.y_center() as i32 - 1,
-                z: 0,
-            },
-            stylemap: white_bg.clone(),
-            ..Default::default()
-        })
         // Moving entity that ensures the box will get redrawn each step the entity passes over it
-        .spawn(SpriteBundle {
+        .spawn_bundle(SpriteBundle {
             sprite: sprites.add(Sprite::new(SMALL_BOX)),
             position: Position {
                 x: window.x_center() as i32 - 1,
                 y: window.y_center() as i32 - 1,
                 z: 1,
             },
-            stylemap: plain.clone(),
+            stylemap: plain,
             visible: Visible::transparent(),
         });
 }

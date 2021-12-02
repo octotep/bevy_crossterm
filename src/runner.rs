@@ -1,28 +1,39 @@
-use std::io::Write;
+use std::{io::Write, time};
+
+use bevy::app::{App, AppExit, Events, RunMode, ScheduleRunnerSettings};
+use bevy::window::{WindowCreated, WindowId, WindowResized};
+use crossterm::{
+    cursor, event,
+    style::SetColors,
+    terminal::{disable_raw_mode, enable_raw_mode, Clear, ClearType, EnterAlternateScreen, LeaveAlternateScreen, SetTitle},
+    ExecutableCommand, QueueableCommand,
+};
 
 use crate::{CrosstermWindow, CrosstermWindowSettings};
 
-use bevy::app::{App, AppExit, Events};
-use bevy::window::{WindowCreated, WindowId, WindowResized};
-use crossterm::{ExecutableCommand, QueueableCommand};
+pub fn clear() {
+    let mut term = std::io::stdout();
+    term.queue(Clear(ClearType::All))
+        .expect("Could not clear screen");
+    term.flush().unwrap();
+}
 
 pub fn crossterm_runner(mut app: App) {
     let settings = app
-        .resources
-        .get_or_insert_with(bevy::app::ScheduleRunnerSettings::default)
+        .world
+        .get_resource_or_insert_with(ScheduleRunnerSettings::default)
         .to_owned();
     let window_settings = app
-        .resources
-        .get_or_insert_with(CrosstermWindowSettings::default)
+        .world
+        .get_resource_or_insert_with(CrosstermWindowSettings::default)
         .clone();
 
     let mut term = std::io::stdout();
 
-    term.queue(crossterm::terminal::EnterAlternateScreen)
-        .unwrap();
-    term.queue(crossterm::event::EnableMouseCapture).unwrap();
+    term.queue(EnterAlternateScreen).unwrap();
+    term.queue(event::EnableMouseCapture).unwrap();
 
-    crossterm::terminal::enable_raw_mode().expect("Could not enable crossterm raw mode");
+    enable_raw_mode().expect("Could not enable crossterm raw mode");
 
     let mut window = CrosstermWindow::default();
 
@@ -30,91 +41,96 @@ pub fn crossterm_runner(mut app: App) {
     {
         if let Some(title) = &window_settings.title() {
             window.title = Some(title.clone());
-            term.queue(crossterm::terminal::SetTitle(&title))
+            term.queue(SetTitle(title))
                 .expect("Could not set terminal title");
         }
 
         window.colors = window_settings.colors();
-        term.queue(crossterm::style::SetColors(window.colors.to_crossterm()))
+        term.queue(SetColors(window.colors.to_crossterm()))
             .expect("Could not set window colors");
     }
 
     // Insert our window resources so that other parts of our app can use them
-    app.resources.insert(window);
+    app.world.insert_resource(window);
 
-    term.queue(crossterm::terminal::Clear(
-        crossterm::terminal::ClearType::All,
-    ))
-    .expect("Could not clear screen");
+    term.queue(Clear(ClearType::All))
+        .expect("Could not clear screen");
 
     term.flush().unwrap();
 
     // Publish to the app that a terminal window has been created
     {
-        let mut window_created_events = app.resources.get_mut::<Events<WindowCreated>>().unwrap();
-        window_created_events.send(WindowCreated {
-            id: WindowId::primary(),
-        });
+        let mut window_created_events = app
+            .world
+            .get_resource_mut::<Events<WindowCreated>>()
+            .unwrap();
+        window_created_events.send(WindowCreated { id: WindowId::primary() });
     }
 
     match settings.run_mode {
-        bevy::app::RunMode::Once => {
+        RunMode::Once => {
             app.update();
         }
-        bevy::app::RunMode::Loop { wait } => {
+        RunMode::Loop { wait } => {
             // Main loop
-            let tick = move |app: &mut App,
-                             wait: Option<std::time::Duration>|
-                  -> Result<Option<std::time::Duration>, AppExit> {
-                let start_time = std::time::Instant::now();
+            let tick = move |app: &mut App, wait: Option<time::Duration>| -> Result<Option<time::Duration>, AppExit> {
+                let start_time = time::Instant::now();
 
                 // Check if any events are immediately available and if so, read them and republish
-                while let Ok(available) = crossterm::event::poll(std::time::Duration::from_secs(0))
-                {
+                while let Ok(available) = crossterm::event::poll(time::Duration::from_secs(0)) {
                     if available {
-                        match crossterm::event::read().unwrap() {
+                        match event::read().unwrap() {
                             // Republish keyboard events in bevy
-                            crossterm::event::Event::Key(key_event) => {
+                            event::Event::Key(key_event) => {
                                 // If the key event is for C-c, submit a AppExit event so the application
                                 // can be killed
-                                use crossterm::event::{KeyCode, KeyModifiers};
+                                use event::{KeyCode, KeyEvent, KeyModifiers};
                                 if key_event.code == KeyCode::Char('c')
-                                    && key_event.modifiers.contains(KeyModifiers::CONTROL)
+                                    && key_event
+                                        .modifiers
+                                        .contains(KeyModifiers::CONTROL)
                                 {
-                                    let mut app_exit_events =
-                                        app.resources.get_mut::<Events<AppExit>>().unwrap();
+                                    let mut app_exit_events = app
+                                        .world
+                                        .get_resource_mut::<Events<AppExit>>()
+                                        .unwrap();
                                     app_exit_events.send(AppExit);
                                 }
 
                                 let mut bevy_key_events = app
-                                    .resources
-                                    .get_mut::<Events<crossterm::event::KeyEvent>>()
+                                    .world
+                                    .get_resource_mut::<Events<KeyEvent>>()
                                     .unwrap();
                                 bevy_key_events.send(key_event);
                             }
 
                             // Republish mouse events in bevy
-                            crossterm::event::Event::Mouse(mouse_event) => {
+                            event::Event::Mouse(mouse_event) => {
+                                use event::MouseEvent;
                                 let mut bevy_mouse_events = app
-                                    .resources
-                                    .get_mut::<Events<crossterm::event::MouseEvent>>()
+                                    .world
+                                    .get_resource_mut::<Events<MouseEvent>>()
                                     .unwrap();
                                 bevy_mouse_events.send(mouse_event);
                             }
 
                             // Send a bevy window resized event if the terminal is resized, and also change the persisted window state
-                            crossterm::event::Event::Resize(width, height) => {
+                            event::Event::Resize(width, height) => {
                                 // Update the window resource and publish an event for the window being resized
-                                let mut window_resized_events =
-                                    app.resources.get_mut::<Events<WindowResized>>().unwrap();
+                                let mut window_resized_events = app
+                                    .world
+                                    .get_resource_mut::<Events<WindowResized>>()
+                                    .unwrap();
                                 window_resized_events.send(WindowResized {
                                     id: WindowId::primary(),
                                     width: width as f32,
                                     height: height as f32,
                                 });
 
-                                let mut window =
-                                    app.resources.get_mut::<CrosstermWindow>().unwrap();
+                                let mut window = app
+                                    .world
+                                    .get_resource_mut::<CrosstermWindow>()
+                                    .unwrap();
                                 window.height = height;
                                 window.width = width;
                             }
@@ -130,15 +146,22 @@ pub fn crossterm_runner(mut app: App) {
                 // After all the other systems have updated, check if there are any AppExit events and
                 // handle them
                 {
-                    let app_exit_events = app.resources.get::<Events<AppExit>>().unwrap();
+                    let app_exit_events = app
+                        .world
+                        .get_resource::<Events<AppExit>>()
+                        .unwrap();
                     let mut app_exit_reader = app_exit_events.get_reader();
-                    if app_exit_reader.iter(&app_exit_events).next().is_some() {
+                    if app_exit_reader
+                        .iter(app_exit_events)
+                        .next()
+                        .is_some()
+                    {
                         // We're breaking out, the app requested an exit
                         return Err(AppExit);
                     };
                 }
 
-                let end_time = std::time::Instant::now();
+                let end_time = time::Instant::now();
 
                 // Calculate how much time that took vs how much time we wanted to wait
                 if let Some(wait) = wait {
@@ -159,12 +182,11 @@ pub fn crossterm_runner(mut app: App) {
             }
 
             // Cleanup and teardown
-            term.execute(crossterm::event::DisableMouseCapture)
+            term.execute(event::DisableMouseCapture)
                 .expect("Could not disable mouse capture");
-            crossterm::terminal::disable_raw_mode().expect("Could not disable raw mode");
-            term.execute(crossterm::terminal::LeaveAlternateScreen)
-                .unwrap();
-            term.execute(crossterm::cursor::Show).unwrap();
+            disable_raw_mode().expect("Could not disable raw mode");
+            term.execute(LeaveAlternateScreen).unwrap();
+            term.execute(cursor::Show).unwrap();
         }
     }
 }

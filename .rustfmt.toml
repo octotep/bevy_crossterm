@@ -1,0 +1,35 @@
+# Specifies which edition is used by the parser.
+edition = "2018"
+
+# Maximum width of each line [default: 100]
+# See: https://rust-lang.github.io/rustfmt/?version=master&search=#max_width
+max_width = 200
+
+# Unix or Windows line endings [default: Auto]
+# Options: Auto, Native, Unix, Windows
+# See: https://rust-lang.github.io/rustfmt/?version=master&search=#newline_style
+newline_style = "Unix"
+
+# Use field initialize shorthand if possible. [default: false]
+# See: https://rust-lang.github.io/rustfmt/?version=master&search=#use_field_init_shorthand
+use_field_init_shorthand = true
+
+# Chain Width [default: max_width]
+# Maximum width of a chain to fit on one line.
+# See: https://github.com/rust-lang/rustfmt/blob/master/Configurations.md#chain_width
+chain_width = 50
+
+# ----------------------------------------------------------------------
+# The options below are only available using: cargo +nightly
+# ----------------------------------------------------------------------
+# This setting is required to use the features below
+unstable_features = true
+
+# Binop Separator: Where to put a binary operator
+#  see: https://github.com/rust-lang/rustfmt/blob/master/Configurations.md#binop_separator
+# binop_separator = "Front"
+
+indent_style = "Block"
+
+# Only available on nightly
+reorder_imports = true

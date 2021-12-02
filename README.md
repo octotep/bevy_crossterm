@@ -49,7 +49,7 @@ pub fn main() {
 
     App::build()
         // Add our window settings
-        .add_resource(settings)
+        .insert_resource(settings)
         // Add the DefaultPlugins before the CrosstermPlugin. The crossterm plugin needs bevy's asset server, and if it's
         // not available you'll trigger an assert
         .add_plugins(DefaultPlugins)
@@ -59,12 +59,12 @@ pub fn main() {
 }
 
 fn startup_system(
-    commands: &mut Commands,
+    mut commands: Commands,
     mut sprites: ResMut<Assets<Sprite>>,
     mut stylemaps: ResMut<Assets<StyleMap>>,
 ) {
     commands
-        .spawn(SpriteBundle {
+        .spawn_bundle(SpriteBundle {
             sprite: sprites.add(Sprite::new("Hello, world!")),
             stylemap: stylemaps.add(StyleMap::default()),
             ..Default::default()

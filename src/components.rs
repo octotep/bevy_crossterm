@@ -1,4 +1,6 @@
 use bevy::prelude::*;
+
+use bevy::asset::Handle;
 use bevy::reflect::TypeUuid;
 use bevy::utils::{HashMap, HashSet};
 use serde::{Deserialize, Serialize};
@@ -38,18 +40,10 @@ pub struct SpriteBundle {
     pub visible: Visible,
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Colors {
     pub foreground: Option<Color>,
     pub background: Option<Color>,
-}
-impl Default for Colors {
-    fn default() -> Self {
-        Colors {
-            foreground: None,
-            background: None,
-        }
-    }
 }
 
 impl Colors {
@@ -100,10 +94,7 @@ impl Colors {
 mod attribute_parser {
     use serde::de::Visitor;
     use serde::{Deserializer, Serializer};
-    pub fn serialize<S>(
-        attrs: &crossterm::style::Attributes,
-        serializer: S,
-    ) -> Result<S::Ok, S::Error>
+    pub fn serialize<S>(attrs: &crossterm::style::Attributes, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
@@ -313,8 +304,10 @@ pub struct Sprite {
 
 impl Sprite {
     pub fn new<T: std::string::ToString>(value: T) -> Sprite {
-        let mut sprite = Sprite::default();
-        sprite.data = value.to_string();
+        let mut sprite = Sprite {
+            data: value.to_string(),
+            ..Default::default()
+        };
 
         Sprite::convert_to_sprite(&mut sprite);
 
@@ -328,7 +321,9 @@ impl Sprite {
         for (start, grapheme) in UnicodeSegmentation::grapheme_indices(&*sprite.data, true) {
             if grapheme == "\r" || grapheme == "\n" || grapheme == "\r\n" {
                 sprite.max_width = std::cmp::max(sprite.max_width, current_line.len());
-                sprite.graphemes.push(std::mem::take(&mut current_line));
+                sprite
+                    .graphemes
+                    .push(std::mem::take(&mut current_line));
                 continue;
             }
 
@@ -337,7 +332,9 @@ impl Sprite {
 
         if !current_line.is_empty() {
             sprite.max_width = std::cmp::max(sprite.max_width, current_line.len());
-            sprite.graphemes.push(std::mem::take(&mut current_line));
+            sprite
+                .graphemes
+                .push(std::mem::take(&mut current_line));
         }
     }
 
@@ -389,25 +386,15 @@ impl Position {
     }
 
     pub fn with_x(x: i32) -> Position {
-        Position {
-            x,
-            ..Default::default()
-        }
+        Position { x, ..Default::default() }
     }
 
     pub fn with_y(y: i32) -> Position {
-        Position {
-            y,
-            ..Default::default()
-        }
+        Position { y, ..Default::default() }
     }
 
     pub fn with_xy(x: i32, y: i32) -> Position {
-        Position {
-            x,
-            y,
-            ..Default::default()
-        }
+        Position { x, y, ..Default::default() }
     }
 }
 

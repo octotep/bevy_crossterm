@@ -40,7 +40,7 @@ bevy_crossterm = "0.4.0"
 ```
 
 ```rust
-use bevy_prelude::*;
+use bevy::prelude::*;
 use bevy_crossterm::prelude::*;
 
 pub fn main() {
